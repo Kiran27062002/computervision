@@ -1,0 +1,11 @@
+ultralytics>=8.2.0
+roboflow
+opencv-python
+numpy
+pandas
+Pillow
+streamlit
+pyngrok
+matplotlib
+torch>=2.0.0
+torchvision
