@@ -1,7 +1,17 @@
 import streamlit as st
+
+# --- Safe import for OpenCV ---
+try:
+    import cv2
+except ImportError:
+    import subprocess
+    subprocess.run(["pip", "install", "opencv-python-headless"])
+    import cv2
+
 from ultralytics import YOLO
-import cv2
+from PIL import Image
 import numpy as np
+import tempfile
 
 # -------------------------
 # Load YOLOv11 Model
