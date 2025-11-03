@@ -43,13 +43,7 @@ else:
 
         time.sleep(0.03)  # ~30 FPS limit
 
-    else:
-        if camera.isOpened():
-            camera.release()
-            st.info("🛑 Webcam stopped.")
+    # --- Release the camera when stopped ---
+    camera.release()
+    st.info("🛑 Webcam stopped.")
 
-
-else:
-if camera.isOpened():
-camera.release()
-st.info("🛑 Webcam stopped.")
