@@ -1,75 +1,54 @@
 import streamlit as st
-
-# --- Safe import for OpenCV ---
-try:
-    import cv2
-except ImportError:
-    import subprocess
-    subprocess.run(["pip", "install", "opencv-python-headless"])
-    import cv2
-
+import cv2
 from ultralytics import YOLO
-from PIL import Image
-import numpy as np
 import tempfile
+import time
 
-# -------------------------
-# Load YOLOv11 Model
-# -------------------------
+# --- Load model once ---
+
 @st.cache_resource
 def load_model():
-    model = YOLO("yolo11n.pt")  # your trained model
-    return model
+return YOLO("yolo11n.pt")
 
 model = load_model()
 
-# -------------------------
-# Streamlit UI Setup
-# -------------------------
-st.set_page_config(page_title="ASL Live Classifier", page_icon="🖐")
-st.title("🖐 American Sign Language Classifier (YOLOv11)")
-st.write("Use your webcam for **real-time hand sign detection**!")
+st.title("🖐 Real-Time Hand Sign Detection (YOLOv11)")
+st.markdown("Detects hand signs live from your webcam and predicts the letter.")
 
-# Initialize session state
-if "run" not in st.session_state:
-    st.session_state.run = False
+# --- Start/Stop control ---
 
-# -------------------------
-# Start/Stop Buttons
-# -------------------------
-col1, col2 = st.columns(2)
-with col1:
-    start = st.button("▶️ Start Live Detection")
-with col2:
-    stop = st.button("⏹️ Stop Detection")
+run = st.checkbox("Start webcam")
 
-# Control logic
-if start:
-    st.session_state.run = True
-if stop:
-    st.session_state.run = False
+FRAME_WINDOW = st.image([])
 
-# -------------------------
-# Live Stream
-# -------------------------
-frame_window = st.image([])
+camera = cv2.VideoCapture(0)
 
-# OpenCV webcam capture
-cap = cv2.VideoCapture(0)
+if not camera.isOpened():
+st.error("❌ Cannot open webcam. Please check your camera or permissions.")
 
-while st.session_state.run:
-    ret, frame = cap.read()
-    if not ret:
-        st.error("Failed to grab frame from webcam.")
-        break
+while run:
+ret, frame = camera.read()
+if not ret:
+st.warning("⚠️ Failed to grab frame from webcam.")
+break
 
-    # Inference
-    results = model.predict(frame, conf=0.5, verbose=False)
-    annotated_frame = results[0].plot()
+```
+# Run YOLO detection
+results = model(frame, verbose=False)
 
-    # Convert BGR → RGB for display
-    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-    frame_window.image(frame_rgb)
+# Annotate frame with YOLO predictions
+annotated_frame = results[0].plot()
 
-cap.release()
-st.write("Webcam stopped.")
+# Convert from BGR (OpenCV) to RGB (Streamlit)
+annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+
+# Display live video
+FRAME_WINDOW.image(annotated_frame, channels="RGB")
+
+time.sleep(0.03)  # ~30 FPS limit
+```
+
+else:
+if camera.isOpened():
+camera.release()
+st.info("🛑 Webcam stopped.")
